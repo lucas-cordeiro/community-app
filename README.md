@@ -1,5 +1,7 @@
 # Community App
 
+[![CI](https://github.com/lucas-cordeiro/community-app/actions/workflows/ci.yml/badge.svg)](https://github.com/lucas-cordeiro/community-app/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/lucas-cordeiro/community-app/graph/badge.svg)](https://codecov.io/gh/lucas-cordeiro/community-app) ![Kotlin](https://img.shields.io/badge/Kotlin-2.2-7F52FF?logo=kotlin&logoColor=white) ![Min SDK](https://img.shields.io/badge/Min%20SDK-24-3DDC84?logo=android&logoColor=white) ![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?logo=jetpackcompose&logoColor=white) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 A small Android app that lists a language‑learning community (paginated) and lets you like members, with the like state persisted locally. It's a showcase of modular Clean Architecture with Jetpack Compose, a reactive MVVM layer, and solid test coverage.
 
 |                                    Light                                    |                                   Dark                                    |
@@ -90,3 +92,7 @@ The release runs R8 (`minifyEnabled true` + resource shrinking) and is signed wi
 ### Coverage
 
 Kover reports **100% line coverage** on the unit‑tested logic (domain / data / presentation). Excluded from the metric (intentional): generated code, DI wiring, `Application`/`MainActivity`, navigation routes, theme, Compose UI composables (covered by instrumented tests), the HTTP client config, and `PreferenceManagerImpl` (covered by an instrumented test). A `koverVerify` gate enforces ≥ 80%.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
