@@ -65,3 +65,13 @@ dependencies {
     kover(project(":app:component:community"))
     kover(project(":app:feature:community"))
 }
+
+kover {
+    reports {
+        verify {
+            rule {
+                minBound(80)
+            }
+        }
+    }
+}

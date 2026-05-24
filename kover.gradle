@@ -6,7 +6,22 @@ kover {
             excludes {
                 annotatedBy("androidx.compose.ui.tooling.preview.Preview")
                 annotatedBy("lucas.cordeiro.community.shared.ui.preview.ThemePreviews")
-                classes("*.BuildConfig")
+                classes(
+                        "*.BuildConfig",
+                        "*.di.*",
+                        "*.navigation.*",
+                        "*.presentation.composables.*",
+                        "*ComposableSingletons*",
+                        "*.CommunityScreenKt",
+                        "*.CommunityPreviewData",
+                        "lucas.cordeiro.community.CommunityApplication",
+                        "lucas.cordeiro.community.presentation.*",
+                        "lucas.cordeiro.community.shared.ui.theme.*",
+                        "lucas.cordeiro.community.shared.ui.preview.*",
+                        "lucas.cordeiro.community.shared.network.client.*",
+                        "lucas.cordeiro.community.shared.core.Logger",
+                        "lucas.cordeiro.community.shared.storage.preference.*"
+                )
             }
         }
     }

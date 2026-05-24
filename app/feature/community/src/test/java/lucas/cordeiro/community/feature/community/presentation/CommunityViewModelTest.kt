@@ -155,6 +155,33 @@ class CommunityViewModelTest {
         }
 
     @Test
+    fun `given initial load failed when retry then recovers and shows members`() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            // Given
+            val members = CommunityMemberStub.list(size = 2)
+            var attempt = 0
+            coEvery { getCommunityMembersUseCase(1) } coAnswers {
+                attempt++
+                if (attempt == 1) throw RuntimeException("boom") else members
+            }
+            every { observeLikedMembersUseCase() } returns flowOf(emptySet())
+            val viewModel = createViewModel()
+            val observer = createObserver(viewModel)
+            advanceUntilIdle()
+
+            // When
+            viewModel.retry()
+            advanceUntilIdle()
+
+            // Then
+            val state = observer.state.last()
+            assertEquals(false, state.isError)
+            assertEquals(members, state.members)
+
+            observer.stop()
+        }
+
+    @Test
     fun `given failure on first page when initialized then shows error state without action`() =
         runTest(mainDispatcherRule.testDispatcher) {
             // Given

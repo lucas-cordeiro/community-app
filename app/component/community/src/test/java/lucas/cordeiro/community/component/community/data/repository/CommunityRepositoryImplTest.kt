@@ -68,6 +68,44 @@ class CommunityRepositoryImplTest {
     }
 
     @Test
+    fun `given known native languages when getCommunity then maps each to its country`() = runTest {
+        // Given
+        val expectedByLanguage = mapOf(
+            "en" to "gb", "de" to "de", "es" to "es", "it" to "it",
+            "ru" to "ru", "pt" to "br", "ja" to "jp", "ko" to "kr",
+            "fr" to "fr", "zh" to "cn", "nl" to "nl", "tr" to "tr", "pl" to "pl",
+        )
+        coEvery { localDataSource.getLikedIds() } returns emptySet()
+
+        expectedByLanguage.forEach { (language, expectedCountry) ->
+            coEvery { networkDataSource.getCommunity(1) } returns CommunityResponseStub.response(
+                listOf(CommunityResponseStub.member(id = 1, natives = listOf(language))),
+            )
+
+            // When
+            val nationality = repository.getCommunity(1).first().nationality
+
+            // Then
+            assertEquals(expectedCountry, nationality)
+        }
+    }
+
+    @Test
+    fun `given unknown native language when getCommunity then nationality is null`() = runTest {
+        // Given
+        coEvery { networkDataSource.getCommunity(1) } returns CommunityResponseStub.response(
+            listOf(CommunityResponseStub.member(id = 1, natives = listOf("xx"))),
+        )
+        coEvery { localDataSource.getLikedIds() } returns emptySet()
+
+        // When
+        val result = repository.getCommunity(1)
+
+        // Then
+        assertNull(result.first().nationality)
+    }
+
+    @Test
     fun `when toggleLike then delegates to local data source`() = runTest {
         // When
         repository.toggleLike(7)

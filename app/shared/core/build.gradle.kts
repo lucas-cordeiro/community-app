@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
 }
 
+apply(from = "$rootDir/kover.gradle")
+
 android {
     namespace = "lucas.cordeiro.community.shared.core"
     compileSdk = 36
