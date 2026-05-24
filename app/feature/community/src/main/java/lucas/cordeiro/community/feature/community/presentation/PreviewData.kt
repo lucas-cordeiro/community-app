@@ -11,8 +11,8 @@ internal object CommunityPreviewData {
             topic = TOPIC,
             firstName = "Jonathan",
             pictureUrl = "",
-            natives = listOf("en, de, it"),
-            learns = listOf("ru, pt"),
+            natives = listOf("en", "de", "it"),
+            learns = listOf("ru", "pt"),
             referenceCnt = 12,
             isLiked = false,
             nationality = "gb"
@@ -22,8 +22,8 @@ internal object CommunityPreviewData {
             topic = TOPIC,
             firstName = "Martina",
             pictureUrl = "",
-            natives = listOf("es, pt"),
-            learns = listOf("ru, en"),
+            natives = listOf("es", "pt"),
+            learns = listOf("ru", "en"),
             referenceCnt = 0,
             isLiked = true,
             nationality = "es"

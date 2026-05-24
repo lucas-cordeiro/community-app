@@ -56,11 +56,14 @@ internal fun CommunityCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val likeActionLabel = stringResource(
+        if (member.isLiked) R.string.community_unlike else R.string.community_like,
+    )
     Row(
         modifier = modifier
             .fillMaxWidth()
             .height(IntrinsicSize.Min)
-            .clickable(onClick = onClick)
+            .clickable(onClickLabel = likeActionLabel, onClick = onClick)
             .padding(16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -201,7 +204,9 @@ private fun LikeThumb(
     ) { liked ->
         Image(
             painter = painterResource(if (liked) SharedUi.drawable.liked else SharedUi.drawable.ic_thumb_up),
-            contentDescription = null,
+            contentDescription = stringResource(
+                if (liked) R.string.community_liked else R.string.community_not_liked,
+            ),
             colorFilter = if (liked) null else ColorFilter.tint(MaterialTheme.colorScheme.onSurfaceVariant),
             modifier = Modifier.size(24.dp),
         )
