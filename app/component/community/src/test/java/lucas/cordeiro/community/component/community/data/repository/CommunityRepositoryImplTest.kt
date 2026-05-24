@@ -20,70 +20,105 @@ class CommunityRepositoryImplTest {
 
     private val networkDataSource: CommunityNetworkDataSource = mockk()
     private val localDataSource: CommunityLocalDataSource = mockk(relaxed = true)
-    private val repository = CommunityRepositoryImpl(networkDataSource, localDataSource)
+
+    private fun repository() = CommunityRepositoryImpl(networkDataSource, localDataSource)
 
     @Test
-    fun `given liked ids when getCommunity then merges isLiked into members`() = runTest {
+    fun `given a page when loadPage then returns count and members emits mapped list`() = runTest {
         // Given
         coEvery { networkDataSource.getCommunity(1) } returns CommunityResponseStub.responseOf(size = 3)
-        coEvery { localDataSource.getLikedIds() } returns setOf(2)
+        every { localDataSource.observeLikedIds() } returns flowOf(emptySet())
+        val repository = repository()
 
         // When
-        val result = repository.getCommunity(1)
+        val count = repository.loadPage(1)
 
         // Then
-        assertEquals(false, result.first { it.id == 1 }.isLiked)
-        assertEquals(true, result.first { it.id == 2 }.isLiked)
-        assertEquals(false, result.first { it.id == 3 }.isLiked)
+        assertEquals(3, count)
+        assertEquals(listOf(1, 2, 3), repository.members.first().map { it.id })
     }
 
     @Test
-    fun `given first native when getCommunity then maps nationality from it`() = runTest {
+    fun `given liked ids when members observed then merges isLiked`() = runTest {
+        // Given
+        coEvery { networkDataSource.getCommunity(1) } returns CommunityResponseStub.responseOf(size = 3)
+        every { localDataSource.observeLikedIds() } returns flowOf(setOf(2))
+        val repository = repository()
+        repository.loadPage(1)
+
+        // When
+        val members = repository.members.first()
+
+        // Then
+        assertEquals(false, members.first { it.id == 1 }.isLiked)
+        assertEquals(true, members.first { it.id == 2 }.isLiked)
+        assertEquals(false, members.first { it.id == 3 }.isLiked)
+    }
+
+    @Test
+    fun `given multiple pages when loadPage then accumulates members`() = runTest {
+        // Given
+        coEvery { networkDataSource.getCommunity(1) } returns CommunityResponseStub.responseOf(size = 20, startId = 1)
+        coEvery { networkDataSource.getCommunity(2) } returns CommunityResponseStub.responseOf(size = 5, startId = 21)
+        every { localDataSource.observeLikedIds() } returns flowOf(emptySet())
+        val repository = repository()
+
+        // When
+        repository.loadPage(1)
+        val secondCount = repository.loadPage(2)
+
+        // Then
+        assertEquals(5, secondCount)
+        assertEquals(25, repository.members.first().size)
+    }
+
+    @Test
+    fun `given first native when members then maps nationality from it`() = runTest {
         // Given
         coEvery { networkDataSource.getCommunity(1) } returns CommunityResponseStub.response(
             listOf(CommunityResponseStub.member(id = 1, natives = listOf("en", "de"))),
         )
-        coEvery { localDataSource.getLikedIds() } returns emptySet()
+        every { localDataSource.observeLikedIds() } returns flowOf(emptySet())
+        val repository = repository()
+        repository.loadPage(1)
 
-        // When
-        val result = repository.getCommunity(1)
-
-        // Then
-        assertEquals("gb", result.first().nationality)
+        // When / Then
+        assertEquals("gb", repository.members.first().first().nationality)
     }
 
     @Test
-    fun `given empty natives when getCommunity then nationality is null`() = runTest {
+    fun `given empty natives when members then nationality is null`() = runTest {
         // Given
         coEvery { networkDataSource.getCommunity(1) } returns CommunityResponseStub.response(
             listOf(CommunityResponseStub.member(id = 1, natives = emptyList())),
         )
-        coEvery { localDataSource.getLikedIds() } returns emptySet()
+        every { localDataSource.observeLikedIds() } returns flowOf(emptySet())
+        val repository = repository()
+        repository.loadPage(1)
 
-        // When
-        val result = repository.getCommunity(1)
-
-        // Then
-        assertNull(result.first().nationality)
+        // When / Then
+        assertNull(repository.members.first().first().nationality)
     }
 
     @Test
-    fun `given known native languages when getCommunity then maps each to its country`() = runTest {
+    fun `given known native languages when members then maps each to its country`() = runTest {
         // Given
         val expectedByLanguage = mapOf(
             "en" to "gb", "de" to "de", "es" to "es", "it" to "it",
             "ru" to "ru", "pt" to "br", "ja" to "jp", "ko" to "kr",
             "fr" to "fr", "zh" to "cn", "nl" to "nl", "tr" to "tr", "pl" to "pl",
         )
-        coEvery { localDataSource.getLikedIds() } returns emptySet()
+        every { localDataSource.observeLikedIds() } returns flowOf(emptySet())
 
         expectedByLanguage.forEach { (language, expectedCountry) ->
             coEvery { networkDataSource.getCommunity(1) } returns CommunityResponseStub.response(
                 listOf(CommunityResponseStub.member(id = 1, natives = listOf(language))),
             )
+            val repository = repository()
+            repository.loadPage(1)
 
             // When
-            val nationality = repository.getCommunity(1).first().nationality
+            val nationality = repository.members.first().first().nationality
 
             // Then
             assertEquals(expectedCountry, nationality)
@@ -91,38 +126,28 @@ class CommunityRepositoryImplTest {
     }
 
     @Test
-    fun `given unknown native language when getCommunity then nationality is null`() = runTest {
+    fun `given unknown native language when members then nationality is null`() = runTest {
         // Given
         coEvery { networkDataSource.getCommunity(1) } returns CommunityResponseStub.response(
             listOf(CommunityResponseStub.member(id = 1, natives = listOf("xx"))),
         )
-        coEvery { localDataSource.getLikedIds() } returns emptySet()
+        every { localDataSource.observeLikedIds() } returns flowOf(emptySet())
+        val repository = repository()
+        repository.loadPage(1)
 
-        // When
-        val result = repository.getCommunity(1)
-
-        // Then
-        assertNull(result.first().nationality)
+        // When / Then
+        assertNull(repository.members.first().first().nationality)
     }
 
     @Test
     fun `when toggleLike then delegates to local data source`() = runTest {
+        // Given
+        val repository = repository()
+
         // When
         repository.toggleLike(7)
 
         // Then
         coVerify { localDataSource.toggleLike(7) }
-    }
-
-    @Test
-    fun `when observeLikedIds then returns ids from local data source`() = runTest {
-        // Given
-        every { localDataSource.observeLikedIds() } returns flowOf(setOf(1, 2))
-
-        // When
-        val result = repository.observeLikedIds().first()
-
-        // Then
-        assertEquals(setOf(1, 2), result)
     }
 }

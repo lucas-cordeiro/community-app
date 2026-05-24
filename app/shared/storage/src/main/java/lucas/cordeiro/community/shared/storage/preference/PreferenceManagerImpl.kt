@@ -24,6 +24,11 @@ internal class PreferenceManagerImpl(context: Context) : PreferenceManager {
         dataStore.edit { it[stringSetPreferencesKey(key)] = value }
     }
 
+    override suspend fun updateStringSet(key: String, transform: (Set<String>) -> Set<String>) {
+        val prefKey = stringSetPreferencesKey(key)
+        dataStore.edit { it[prefKey] = transform(it[prefKey] ?: emptySet()) }
+    }
+
     override fun observeStringSet(key: String): Flow<Set<String>> =
         dataStore.data.map { it[stringSetPreferencesKey(key)] ?: emptySet() }
 }

@@ -63,7 +63,7 @@ class CommunityScreenTest {
         // When
         composeRule.communityScreen(
             state = CommunityUiState(isLoading = false, isError = true),
-            onRetry = { retried = true },
+            onRetryClick = { retried = true },
         ) {
             assertErrorDisplayed()
             clickRetry()

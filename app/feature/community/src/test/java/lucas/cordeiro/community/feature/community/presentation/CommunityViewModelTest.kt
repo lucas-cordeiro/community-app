@@ -7,12 +7,12 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import lucas.cordeiro.community.component.community.domain.usecase.GetCommunityMembersUseCase
-import lucas.cordeiro.community.component.community.domain.usecase.ObserveLikedMembersUseCase
+import lucas.cordeiro.community.component.community.domain.model.CommunityMember
+import lucas.cordeiro.community.component.community.domain.usecase.LoadCommunityPageUseCase
+import lucas.cordeiro.community.component.community.domain.usecase.ObserveCommunityMembersUseCase
 import lucas.cordeiro.community.component.community.domain.usecase.ToggleMemberLikeUseCase
 import lucas.cordeiro.community.feature.community.stubs.CommunityMemberStub
 import lucas.cordeiro.community.shared.ui.test.viewmodel.MainDispatcherRule
@@ -27,14 +27,26 @@ class CommunityViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule(StandardTestDispatcher())
 
-    private val getCommunityMembersUseCase: GetCommunityMembersUseCase = mockk()
+    private val membersFlow = MutableStateFlow<List<CommunityMember>>(emptyList())
+    private val loadCommunityPageUseCase: LoadCommunityPageUseCase = mockk()
     private val toggleMemberLikeUseCase: ToggleMemberLikeUseCase = mockk(relaxed = true)
-    private val observeLikedMembersUseCase: ObserveLikedMembersUseCase = mockk()
+    private val observeCommunityMembersUseCase: ObserveCommunityMembersUseCase = mockk()
+
+    init {
+        every { observeCommunityMembersUseCase() } returns membersFlow
+    }
+
+    private fun stubPage(page: Int, members: List<CommunityMember>) {
+        coEvery { loadCommunityPageUseCase(page) } coAnswers {
+            membersFlow.value = membersFlow.value + members
+            members.size
+        }
+    }
 
     private fun createViewModel() = CommunityViewModel(
-        getCommunityMembersUseCase = getCommunityMembersUseCase,
+        observeCommunityMembersUseCase = observeCommunityMembersUseCase,
+        loadCommunityPageUseCase = loadCommunityPageUseCase,
         toggleMemberLikeUseCase = toggleMemberLikeUseCase,
-        observeLikedMembersUseCase = observeLikedMembersUseCase,
         ioDispatcher = mainDispatcherRule.testDispatcher,
     )
 
@@ -53,9 +65,7 @@ class CommunityViewModelTest {
     fun `given members returned when initialized then loads first page and stops loading`() =
         runTest(mainDispatcherRule.testDispatcher) {
             // Given
-            val members = CommunityMemberStub.list(size = 2)
-            coEvery { getCommunityMembersUseCase(1) } returns members
-            every { observeLikedMembersUseCase() } returns flowOf(emptySet())
+            stubPage(1, CommunityMemberStub.list(size = 2))
 
             // When
             val observer = createObserver(createViewModel())
@@ -64,7 +74,7 @@ class CommunityViewModelTest {
             // Then
             val state = observer.state.last()
             assertEquals(false, state.isLoading)
-            assertEquals(members, state.members)
+            assertEquals(2, state.members.size)
 
             observer.stop()
         }
@@ -73,22 +83,19 @@ class CommunityViewModelTest {
     fun `given full page when loading next page then appends second page`() =
         runTest(mainDispatcherRule.testDispatcher) {
             // Given
-            val page1 = CommunityMemberStub.list(size = 20, startId = 1)
-            val page2 = CommunityMemberStub.list(size = 20, startId = 21)
-            coEvery { getCommunityMembersUseCase(1) } returns page1
-            coEvery { getCommunityMembersUseCase(2) } returns page2
-            every { observeLikedMembersUseCase() } returns flowOf(emptySet())
+            stubPage(1, CommunityMemberStub.list(size = 20, startId = 1))
+            stubPage(2, CommunityMemberStub.list(size = 20, startId = 21))
             val viewModel = createViewModel()
             val observer = createObserver(viewModel)
             advanceUntilIdle()
 
             // When
-            viewModel.loadNextPage()
+            viewModel.reachedEnd()
             advanceUntilIdle()
 
             // Then
             assertEquals(40, observer.state.last().members.size)
-            coVerify { getCommunityMembersUseCase(2) }
+            coVerify { loadCommunityPageUseCase(2) }
 
             observer.stop()
         }
@@ -97,19 +104,18 @@ class CommunityViewModelTest {
     fun `given last page smaller than page size when loading then marks end and stops paginating`() =
         runTest(mainDispatcherRule.testDispatcher) {
             // Given
-            coEvery { getCommunityMembersUseCase(1) } returns CommunityMemberStub.list(size = 5)
-            every { observeLikedMembersUseCase() } returns flowOf(emptySet())
+            stubPage(1, CommunityMemberStub.list(size = 5))
             val viewModel = createViewModel()
             val observer = createObserver(viewModel)
             advanceUntilIdle()
 
             // When
-            viewModel.loadNextPage()
+            viewModel.reachedEnd()
             advanceUntilIdle()
 
             // Then
             assertEquals(true, observer.state.last().endReached)
-            coVerify(exactly = 1) { getCommunityMembersUseCase(any()) }
+            coVerify(exactly = 1) { loadCommunityPageUseCase(any()) }
 
             observer.stop()
         }
@@ -118,14 +124,12 @@ class CommunityViewModelTest {
     fun `given liked ids emitted when observing then member is marked liked`() =
         runTest(mainDispatcherRule.testDispatcher) {
             // Given
-            val likedFlow = MutableStateFlow<Set<Int>>(emptySet())
-            coEvery { getCommunityMembersUseCase(1) } returns CommunityMemberStub.list(size = 3)
-            every { observeLikedMembersUseCase() } returns likedFlow
+            stubPage(1, CommunityMemberStub.list(size = 3))
             val observer = createObserver(createViewModel())
             advanceUntilIdle()
 
             // When
-            likedFlow.value = setOf(2)
+            membersFlow.value = membersFlow.value.map { if (it.id == 2) it.copy(isLiked = true) else it }
             advanceUntilIdle()
 
             // Then
@@ -138,14 +142,13 @@ class CommunityViewModelTest {
     fun `when member clicked then toggles like`() =
         runTest(mainDispatcherRule.testDispatcher) {
             // Given
-            coEvery { getCommunityMembersUseCase(1) } returns CommunityMemberStub.list(size = 1)
-            every { observeLikedMembersUseCase() } returns flowOf(emptySet())
+            stubPage(1, CommunityMemberStub.list(size = 1))
             val viewModel = createViewModel()
             val observer = createObserver(viewModel)
             advanceUntilIdle()
 
             // When
-            viewModel.onMemberClick(1)
+            viewModel.clickedMember(1)
             advanceUntilIdle()
 
             // Then
@@ -160,23 +163,24 @@ class CommunityViewModelTest {
             // Given
             val members = CommunityMemberStub.list(size = 2)
             var attempt = 0
-            coEvery { getCommunityMembersUseCase(1) } coAnswers {
+            coEvery { loadCommunityPageUseCase(1) } coAnswers {
                 attempt++
-                if (attempt == 1) throw RuntimeException("boom") else members
+                if (attempt == 1) throw RuntimeException("boom")
+                membersFlow.value = membersFlow.value + members
+                members.size
             }
-            every { observeLikedMembersUseCase() } returns flowOf(emptySet())
             val viewModel = createViewModel()
             val observer = createObserver(viewModel)
             advanceUntilIdle()
 
             // When
-            viewModel.retry()
+            viewModel.clickedRetry()
             advanceUntilIdle()
 
             // Then
             val state = observer.state.last()
             assertEquals(false, state.isError)
-            assertEquals(members, state.members)
+            assertEquals(2, state.members.size)
 
             observer.stop()
         }
@@ -185,8 +189,7 @@ class CommunityViewModelTest {
     fun `given failure on first page when initialized then shows error state without action`() =
         runTest(mainDispatcherRule.testDispatcher) {
             // Given
-            coEvery { getCommunityMembersUseCase(1) } throws RuntimeException("boom")
-            every { observeLikedMembersUseCase() } returns flowOf(emptySet())
+            coEvery { loadCommunityPageUseCase(1) } throws RuntimeException("boom")
 
             // When
             val observer = createObserver(createViewModel())
@@ -205,20 +208,20 @@ class CommunityViewModelTest {
     fun `given failure on next page when paginating then emits error action and keeps list`() =
         runTest(mainDispatcherRule.testDispatcher) {
             // Given
-            coEvery { getCommunityMembersUseCase(1) } returns CommunityMemberStub.list(size = 20)
-            coEvery { getCommunityMembersUseCase(2) } throws RuntimeException("some error")
-            every { observeLikedMembersUseCase() } returns flowOf(emptySet())
+            stubPage(1, CommunityMemberStub.list(size = 20))
+            coEvery { loadCommunityPageUseCase(2) } throws RuntimeException("some error")
             val viewModel = createViewModel()
             val observer = createObserver(viewModel)
             advanceUntilIdle()
 
             // When
-            viewModel.loadNextPage()
+            viewModel.reachedEnd()
             advanceUntilIdle()
 
             // Then
             val state = observer.state.last()
             assertEquals(false, state.isError)
+            assertEquals(true, state.isNextPageError)
             assertEquals(20, state.members.size)
             assertTrue(observer.action.last() is CommunityUiAction.ShowError)
 

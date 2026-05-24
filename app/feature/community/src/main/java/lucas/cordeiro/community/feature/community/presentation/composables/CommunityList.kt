@@ -1,6 +1,8 @@
 package lucas.cordeiro.community.feature.community.presentation.composables
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,6 +15,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -20,8 +24,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import lucas.cordeiro.community.component.community.domain.model.CommunityMember
+import lucas.cordeiro.community.feature.community.R
 import lucas.cordeiro.community.feature.community.presentation.CommunityPreviewData
 import lucas.cordeiro.community.shared.ui.preview.PreviewContainer
 import lucas.cordeiro.community.shared.ui.preview.ThemePreviews
@@ -30,8 +36,9 @@ import lucas.cordeiro.community.shared.ui.preview.ThemePreviews
 internal fun CommunityList(
     members: List<CommunityMember>,
     isLoadingNextPage: Boolean,
+    isNextPageError: Boolean,
     onMemberClick: (Int) -> Unit,
-    onLoadNextPage: () -> Unit,
+    onEndReached: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
@@ -44,7 +51,7 @@ internal fun CommunityList(
     }
 
     LaunchedEffect(shouldLoadMore) {
-        if (shouldLoadMore) onLoadNextPage()
+        if (shouldLoadMore) onEndReached()
     }
 
     LazyColumn(state = listState, modifier = modifier.fillMaxSize()) {
@@ -75,6 +82,26 @@ internal fun CommunityList(
                 }
             }
         }
+        if (isNextPageError) {
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.community_load_more_error),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    OutlinedButton(onClick = onEndReached) {
+                        Text(stringResource(R.string.community_retry))
+                    }
+                }
+            }
+        }
         item {
             Spacer(Modifier.navigationBarsPadding())
         }
@@ -90,8 +117,37 @@ private fun CommunityListPreview() {
         CommunityList(
             members = CommunityPreviewData.members,
             isLoadingNextPage = false,
+            isNextPageError = false,
             onMemberClick = {},
-            onLoadNextPage = {},
+            onEndReached = {},
+        )
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun CommunityListLoadingNextPagePreview() {
+    PreviewContainer {
+        CommunityList(
+            members = CommunityPreviewData.members,
+            isLoadingNextPage = true,
+            isNextPageError = false,
+            onMemberClick = {},
+            onEndReached = {},
+        )
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun CommunityListNextPageErrorPreview() {
+    PreviewContainer {
+        CommunityList(
+            members = CommunityPreviewData.members,
+            isLoadingNextPage = false,
+            isNextPageError = true,
+            onMemberClick = {},
+            onEndReached = {},
         )
     }
 }

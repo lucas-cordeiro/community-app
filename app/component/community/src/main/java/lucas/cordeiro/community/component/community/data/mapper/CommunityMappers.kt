@@ -3,7 +3,7 @@ package lucas.cordeiro.community.component.community.data.mapper
 import lucas.cordeiro.community.component.community.data.network.model.CommunityMemberResponse
 import lucas.cordeiro.community.component.community.domain.model.CommunityMember
 
-internal fun CommunityMemberResponse.toDomain(isLiked: Boolean): CommunityMember =
+internal fun CommunityMemberResponse.toDomain(): CommunityMember =
     CommunityMember(
         id = id,
         topic = topic,
@@ -12,7 +12,7 @@ internal fun CommunityMemberResponse.toDomain(isLiked: Boolean): CommunityMember
         natives = natives,
         learns = learns,
         referenceCnt = referenceCnt,
-        isLiked = isLiked,
+        isLiked = false,
         nationality = natives.firstOrNull()?.let(::flagCodeFor),
     )
 

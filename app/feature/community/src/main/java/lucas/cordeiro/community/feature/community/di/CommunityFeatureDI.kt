@@ -9,9 +9,9 @@ object CommunityFeatureDI {
     val module: Module = module {
         viewModel {
             CommunityViewModel(
-                getCommunityMembersUseCase = get(),
+                observeCommunityMembersUseCase = get(),
+                loadCommunityPageUseCase = get(),
                 toggleMemberLikeUseCase = get(),
-                observeLikedMembersUseCase = get(),
             )
         }
     }

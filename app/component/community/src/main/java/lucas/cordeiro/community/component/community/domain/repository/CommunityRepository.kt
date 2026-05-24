@@ -4,7 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import lucas.cordeiro.community.component.community.domain.model.CommunityMember
 
 interface CommunityRepository {
-    suspend fun getCommunity(page: Int): List<CommunityMember>
-    fun observeLikedIds(): Flow<Set<Int>>
+    val members: Flow<List<CommunityMember>>
+    suspend fun loadPage(page: Int): Int
     suspend fun toggleLike(id: Int)
 }

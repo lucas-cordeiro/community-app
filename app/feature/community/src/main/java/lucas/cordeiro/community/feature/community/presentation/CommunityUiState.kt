@@ -7,6 +7,7 @@ internal data class CommunityUiState(
     val isLoading: Boolean = true,
     val isLoadingNextPage: Boolean = false,
     val isError: Boolean = false,
+    val isNextPageError: Boolean = false,
     val endReached: Boolean = false,
     val members: List<CommunityMember> = emptyList(),
 ) : UiState

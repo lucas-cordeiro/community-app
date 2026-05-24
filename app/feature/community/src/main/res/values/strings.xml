@@ -5,5 +5,7 @@
     <string name="community_native">NATIVE</string>
     <string name="community_learns">LEARNS</string>
     <string name="community_error">Couldn\'t load the community.</string>
+    <string name="community_empty">No community members to show yet.</string>
+    <string name="community_load_more_error">Couldn\'t load more.</string>
     <string name="community_retry">Try again</string>
 </resources>

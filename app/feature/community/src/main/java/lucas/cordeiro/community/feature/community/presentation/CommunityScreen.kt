@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.lucascordeiro.ymir.core.utils.LifecycleUtils.ObserveActions
 import lucas.cordeiro.community.feature.community.R
+import lucas.cordeiro.community.feature.community.presentation.composables.CommunityEmpty
 import lucas.cordeiro.community.feature.community.presentation.composables.CommunityError
 import lucas.cordeiro.community.feature.community.presentation.composables.CommunityList
 import lucas.cordeiro.community.feature.community.presentation.composables.CommunitySkeletonList
@@ -42,9 +43,9 @@ fun CommunityScreen() {
 
     CommunityContent(
         state = state,
-        onMemberClick = viewModel::onMemberClick,
-        onRetry = viewModel::retry,
-        onLoadNextPage = viewModel::loadNextPage,
+        onMemberClick = viewModel::clickedMember,
+        onRetryClick = viewModel::clickedRetry,
+        onEndReached = viewModel::reachedEnd,
     )
 }
 
@@ -52,8 +53,8 @@ fun CommunityScreen() {
 internal fun CommunityContent(
     state: CommunityUiState,
     onMemberClick: (Int) -> Unit,
-    onRetry: () -> Unit,
-    onLoadNextPage: () -> Unit,
+    onRetryClick: () -> Unit,
+    onEndReached: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -70,12 +71,14 @@ internal fun CommunityContent(
         )
         when {
             state.isLoading -> CommunitySkeletonList()
-            state.isError -> CommunityError(onRetry = onRetry)
+            state.isError -> CommunityError(onRetryClick = onRetryClick)
+            state.members.isEmpty() -> CommunityEmpty()
             else -> CommunityList(
                 members = state.members,
                 isLoadingNextPage = state.isLoadingNextPage,
+                isNextPageError = state.isNextPageError,
                 onMemberClick = onMemberClick,
-                onLoadNextPage = onLoadNextPage,
+                onEndReached = onEndReached,
             )
         }
     }
@@ -88,8 +91,8 @@ private fun CommunityContentLoadingPreview() {
         CommunityContent(
             state = CommunityUiState(isLoading = true),
             onMemberClick = {},
-            onRetry = {},
-            onLoadNextPage = {},
+            onRetryClick = {},
+            onEndReached = {},
         )
     }
 }
@@ -101,8 +104,8 @@ private fun CommunityContentErrorPreview() {
         CommunityContent(
             state = CommunityUiState(isLoading = false, isError = true),
             onMemberClick = {},
-            onRetry = {},
-            onLoadNextPage = {},
+            onRetryClick = {},
+            onEndReached = {},
         )
     }
 }
@@ -114,8 +117,21 @@ private fun CommunityContentLoadedPreview() {
         CommunityContent(
             state = CommunityUiState(isLoading = false, members = CommunityPreviewData.members),
             onMemberClick = {},
-            onRetry = {},
-            onLoadNextPage = {},
+            onRetryClick = {},
+            onEndReached = {},
+        )
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun CommunityContentEmptyPreview() {
+    PreviewContainer {
+        CommunityContent(
+            state = CommunityUiState(isLoading = false, members = emptyList()),
+            onMemberClick = {},
+            onRetryClick = {},
+            onEndReached = {},
         )
     }
 }

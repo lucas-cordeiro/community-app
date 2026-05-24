@@ -13,7 +13,8 @@ A small Android app that lists a language‑learning community (paginated) and l
 - Paginated community feed (20 per page) with **infinite scroll**; stops when a page returns fewer than 20 items.
 - `referenceCnt == 0` shows a **NEW** badge; otherwise the count is shown next to a contact icon.
 - Tap a card to **like** it — persisted with DataStore and restored after relaunch (with a pop/crossfade animation).
-- A **nationality flag** derived from the member's first native language, shown next to the name.
+- Empty, error and **per‑page retry** states: a full‑screen retry on first load, an inline "load more" retry when a subsequent page fails, and an empty placeholder.
+- A small **flag next to the name** — purely a decorative touch to make the list feel livelier, derived from the member's *first native language* (e.g. `en → GB`). The API has no nationality field, so this is **not** a real nationality, just a cosmetic cue.
 - Light and dark themes.
 
 ## Tech stack
@@ -59,7 +60,7 @@ app
 
 **Why modular:** clear separation of concerns and dependency direction, isolated/faster builds and tests per module, and test‑support tailored per layer (`network:test` for data, `ui:test` for UI) so each layer pulls only what it needs.
 
-**Reactive likes:** the repository merges the fetched page with a `Flow<Set<Int>>` of liked ids (DataStore). Toggling writes to DataStore → the flow re‑emits → `CommunityViewModel` recomputes the list `isLiked`. The like reflects immediately and survives relaunch.
+**Reactive likes (single source of truth):** the repository owns the merge. It holds the loaded pages and `combine`s them with a `Flow<Set<Int>>` of liked ids (DataStore), exposing a single `Flow<List<CommunityMember>>` with `isLiked` already resolved. Toggling writes to DataStore (atomically, inside one `edit {}` transaction) → the flow re‑emits → the merged list updates. `CommunityViewModel` only collects and renders, so `isLiked` is never recomputed in two places. The like reflects immediately and survives relaunch.
 
 ## Build & run
 
@@ -97,13 +98,19 @@ Or open the downloaded file on the device (allow installing from unknown sources
 ./gradlew :app:koverVerify           # fails if line coverage < 80%
 ```
 
-- **Unit:** `CommunityViewModel` (pagination, reactive like, error/retry), repository (isLiked merge, nationality mapping, end‑of‑pages), local data source (toggle/observe), network data source (URL + parsing + error via Ktor `MockEngine`), model & domain.
+- **Unit:** `CommunityViewModel` (pagination, reactive like, empty / error / next‑page retry), repository as single source of truth (reactive `isLiked` merge, nationality mapping, page accumulation), local data source (atomic toggle / observe), network data source (URL + parsing + error via Ktor `MockEngine`), model & domain.
 - **Instrumented:** `CommunityScreen` Compose UI (render, NEW vs count, click) with a **Robot pattern**; DataStore persistence round‑trip.
 - Reusable test‑support: `HttpClientMock` (a per‑test configurable request handler) and `ScreenRobot`.
 
 ### Coverage
 
 Kover reports **100% line coverage** on the unit‑tested logic (domain / data / presentation). Excluded from the metric (intentional): generated code, DI wiring, `Application`/`MainActivity`, navigation routes, theme, Compose UI composables (covered by instrumented tests), the HTTP client config, and `PreferenceManagerImpl` (covered by an instrumented test). A `koverVerify` gate enforces ≥ 80%.
+
+### Continuous integration
+
+CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs the **unit** suite plus coverage on every push/PR: `./gradlew test :app:koverXmlReport :app:koverVerify`. Instrumented tests (`androidTest`) need a device/emulator and are **not** run in CI — run them locally with `./gradlew connectedDebugAndroidTest`.
+
+Coverage is uploaded to Codecov, which needs a `CODECOV_TOKEN` repository secret (Settings → Secrets and variables → Actions). The upload step uses `fail_ci_if_error: true`, so a missing token fails CI; the badge therefore reflects **unit** coverage only.
 
 ## License
 

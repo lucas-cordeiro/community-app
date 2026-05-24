@@ -4,6 +4,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -19,45 +20,36 @@ class CommunityLocalDataSourceTest {
     private val dataSource = CommunityLocalDataSourceImpl(preferenceManager)
 
     @Test
-    fun `given id not liked when toggle then adds it`() = runTest {
+    fun `given id not liked when toggle then transform adds it atomically`() = runTest {
         // Given
-        coEvery { preferenceManager.getStringSet(any()) } returns emptySet()
+        val transform = slot<(Set<String>) -> Set<String>>()
+        coEvery { preferenceManager.updateStringSet(any(), capture(transform)) } returns Unit
 
         // When
         dataSource.toggleLike(5)
 
         // Then
-        coVerify { preferenceManager.setStringSet(any(), setOf("5")) }
+        coVerify { preferenceManager.updateStringSet(any(), any()) }
+        assertEquals(setOf("5"), transform.captured(emptySet()))
     }
 
     @Test
-    fun `given id already liked when toggle then removes it`() = runTest {
+    fun `given id already liked when toggle then transform removes it atomically`() = runTest {
         // Given
-        coEvery { preferenceManager.getStringSet(any()) } returns setOf("5")
+        val transform = slot<(Set<String>) -> Set<String>>()
+        coEvery { preferenceManager.updateStringSet(any(), capture(transform)) } returns Unit
 
         // When
         dataSource.toggleLike(5)
 
         // Then
-        coVerify { preferenceManager.setStringSet(any(), emptySet()) }
+        assertEquals(emptySet<String>(), transform.captured(setOf("5")))
     }
 
     @Test
-    fun `given stored ids when getLikedIds then maps to ints ignoring invalid`() = runTest {
+    fun `given observed ids when observeLikedIds then maps to ints ignoring invalid`() = runTest {
         // Given
-        coEvery { preferenceManager.getStringSet(any()) } returns setOf("1", "2", "x")
-
-        // When
-        val result = dataSource.getLikedIds()
-
-        // Then
-        assertEquals(setOf(1, 2), result)
-    }
-
-    @Test
-    fun `given observed ids when observeLikedIds then maps to ints`() = runTest {
-        // Given
-        every { preferenceManager.observeStringSet(any()) } returns flowOf(setOf("3", "4"))
+        every { preferenceManager.observeStringSet(any()) } returns flowOf(setOf("3", "4", "x"))
 
         // When
         val result = dataSource.observeLikedIds().first()

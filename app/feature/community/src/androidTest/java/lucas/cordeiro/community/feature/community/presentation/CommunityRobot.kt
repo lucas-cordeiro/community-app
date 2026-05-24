@@ -28,16 +28,16 @@ internal class CommunityRobot(
 internal fun ComposeContentTestRule.communityScreen(
     state: CommunityUiState,
     onMemberClick: (Int) -> Unit = {},
-    onRetry: () -> Unit = {},
-    onLoadNextPage: () -> Unit = {},
+    onRetryClick: () -> Unit = {},
+    onEndReached: () -> Unit = {},
     block: CommunityRobot.() -> Unit,
 ): CommunityRobot {
     setContent {
         CommunityContent(
             state = state,
             onMemberClick = onMemberClick,
-            onRetry = onRetry,
-            onLoadNextPage = onLoadNextPage,
+            onRetryClick = onRetryClick,
+            onEndReached = onEndReached,
         )
     }
     return CommunityRobot(this).apply(block)
