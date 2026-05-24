@@ -1,0 +1,13 @@
+apply plugin: libs.plugins.kover.get().pluginId.toString()
+
+kover {
+    reports {
+        filters {
+            excludes {
+                annotatedBy("androidx.compose.ui.tooling.preview.Preview")
+                annotatedBy("lucas.cordeiro.community.shared.ui.preview.ThemePreviews")
+                classes("*.BuildConfig")
+            }
+        }
+    }
+}
