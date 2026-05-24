@@ -1,4 +1,4 @@
-package lucas.cordeiro.community.shared.test.viewmodel
+package lucas.cordeiro.community.shared.ui.test.viewmodel
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers

@@ -5,11 +5,9 @@ dependencies {
     implementation(project(":app:shared:storage"))
     implementation(libs.ktor.core)
 
-    testImplementation(project(":app:shared:test"))
-    androidTestImplementation(project(":app:shared:test"))
+    testImplementation(project(":app:shared:network:test"))
+    androidTestImplementation(project(":app:shared:network:test"))
 
-    testImplementation(libs.ymir.test)
     testImplementation(libs.coroutines.test)
     testImplementation(libs.mockk.android)
-    androidTestImplementation(libs.mockk.android)
 }

@@ -26,7 +26,8 @@ include(":app:shared:core")
 include(":app:shared:network")
 include(":app:shared:storage")
 include(":app:shared:ui")
-include(":app:shared:test")
+include(":app:shared:ui:test")
+include(":app:shared:network:test")
 
 include(":app:component:community")
 

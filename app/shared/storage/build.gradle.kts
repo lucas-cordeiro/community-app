@@ -10,4 +10,6 @@ android {
 
 dependencies {
     implementation(libs.datastore.preferences)
+
+    androidTestImplementation(libs.coroutines.test)
 }

@@ -17,13 +17,6 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 internal class PreferenceManagerImpl(context: Context) : PreferenceManager {
     private val dataStore = context.dataStore
 
-    override suspend fun getString(key: String): String? =
-        dataStore.data.map { it[stringPreferencesKey(key)] }.firstOrNull()
-
-    override suspend fun setString(key: String, value: String) {
-        dataStore.edit { it[stringPreferencesKey(key)] = value }
-    }
-
     override suspend fun getStringSet(key: String): Set<String> =
         dataStore.data.map { it[stringSetPreferencesKey(key)] ?: emptySet() }.first()
 
@@ -33,15 +26,4 @@ internal class PreferenceManagerImpl(context: Context) : PreferenceManager {
 
     override fun observeStringSet(key: String): Flow<Set<String>> =
         dataStore.data.map { it[stringSetPreferencesKey(key)] ?: emptySet() }
-
-    override suspend fun removeKey(key: String) {
-        dataStore.edit { prefs ->
-            prefs.remove(stringPreferencesKey(key))
-            prefs.remove(stringSetPreferencesKey(key))
-        }
-    }
-
-    override suspend fun clear() {
-        dataStore.edit { it.clear() }
-    }
 }

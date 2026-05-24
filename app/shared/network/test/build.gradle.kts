@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "lucas.cordeiro.community.shared.test"
+    namespace = "lucas.cordeiro.community.shared.network.test"
     compileSdk = 36
 
     defaultConfig {
@@ -21,9 +21,9 @@ android {
 }
 
 dependencies {
-    api(libs.junit)
-    api(libs.coroutines.test)
-    api(libs.mockk.android)
-    api(libs.koin.test)
-    api(libs.ymir.test)
+    api(libs.ktor.core)
+    api(libs.ktor.mock)
+    implementation(libs.ktor.contentnegotiation)
+    implementation(libs.ktor.serialization)
+    implementation(libs.utils.serialization)
 }

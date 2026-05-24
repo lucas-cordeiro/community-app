@@ -55,14 +55,13 @@ dependencies {
 
     implementation(libs.utils.appstartup)
 
-    testImplementation(project(":app:shared:test"))
-    androidTestImplementation(project(":app:shared:test"))
+    testImplementation(project(":app:shared:ui:test"))
+    androidTestImplementation(project(":app:shared:ui:test"))
 
     kover(project(":app:shared:core"))
     kover(project(":app:shared:network"))
     kover(project(":app:shared:storage"))
     kover(project(":app:shared:ui"))
-    kover(project(":app:shared:test"))
     kover(project(":app:component:community"))
     kover(project(":app:feature:community"))
 }
