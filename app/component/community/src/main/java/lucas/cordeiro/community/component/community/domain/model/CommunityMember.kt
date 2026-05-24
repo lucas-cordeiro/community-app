@@ -9,6 +9,7 @@ data class CommunityMember(
     val learns: List<String>,
     val referenceCnt: Int,
     val isLiked: Boolean,
+    val nationality: String?,
 ) {
     val isNew: Boolean get() = referenceCnt == 0
 }

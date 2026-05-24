@@ -10,4 +10,6 @@ android {
 
 dependencies {
     implementation(project(":app:component:community"))
+    implementation(libs.flagkit)
+    implementation(libs.icons.lucide)
 }

@@ -1,5 +1,13 @@
 package lucas.cordeiro.community.feature.community.presentation.composables
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,8 +37,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.composables.icons.lucide.ContactRound
+import com.composables.icons.lucide.Lucide
+import flagkit.Flag
 import lucas.cordeiro.community.component.community.domain.model.CommunityMember
 import lucas.cordeiro.community.feature.community.R
 import lucas.cordeiro.community.feature.community.presentation.CommunityPreviewData
@@ -71,7 +83,17 @@ internal fun CommunityCard(
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    member.nationality?.let { code ->
+                        Flag(
+                            code = code,
+                            shape = RoundedCornerShape(2.dp),
+                            size = DpSize(width = 24.dp, height = 18.dp),
+                        )
+                    }
                     Text(
                         text = member.firstName,
                         style = MaterialTheme.typography.titleLarge,
@@ -123,12 +145,23 @@ private fun MemberBadge(member: CommunityMember) {
                 .padding(horizontal = 12.dp, vertical = 4.dp),
         )
     } else {
-        Text(
-            text = member.referenceCnt.toString(),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Icon(
+                imageVector = Lucide.ContactRound,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(16.dp),
+            )
+            Text(
+                text = member.referenceCnt.toString(),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 
@@ -157,12 +190,22 @@ private fun LikeThumb(
     isLiked: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    Image(
-        painter = painterResource(if (isLiked) SharedUi.drawable.liked else SharedUi.drawable.ic_thumb_up),
-        contentDescription = null,
-        colorFilter = if(isLiked) null else ColorFilter.tint(MaterialTheme.colorScheme.onSurfaceVariant),
-        modifier = modifier.size(24.dp),
-    )
+    AnimatedContent(
+        targetState = isLiked,
+        transitionSpec = {
+            (scaleIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy)) + fadeIn())
+                .togetherWith(scaleOut() + fadeOut())
+        },
+        modifier = modifier,
+        label = "like",
+    ) { liked ->
+        Image(
+            painter = painterResource(if (liked) SharedUi.drawable.liked else SharedUi.drawable.ic_thumb_up),
+            contentDescription = null,
+            colorFilter = if (liked) null else ColorFilter.tint(MaterialTheme.colorScheme.onSurfaceVariant),
+            modifier = Modifier.size(24.dp),
+        )
+    }
 }
 
 @ThemePreviews
