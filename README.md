@@ -76,6 +76,18 @@ Requires JDK 21 and the Android SDK (set `sdk.dir` in `local.properties`).
 
 The release runs R8 (`minifyEnabled true` + resource shrinking) and is signed with the debug key.
 
+## Download
+
+A prebuilt, minified release APK is committed at [`apk/community-app-release.apk`](apk/community-app-release.apk) — or grab it via [direct download](https://github.com/lucas-cordeiro/community-app/raw/main/apk/community-app-release.apk).
+
+Install it on a connected device/emulator:
+
+```bash
+adb install apk/community-app-release.apk
+```
+
+Or open the downloaded file on the device (allow installing from unknown sources).
+
 ## Tests
 
 ```bash
