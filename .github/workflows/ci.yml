@@ -31,3 +31,6 @@ jobs:
         with:
           files: app/build/reports/kover/report.xml
           token: ${{ secrets.CODECOV_TOKEN }}
+          slug: lucas-cordeiro/community-app
+          fail_ci_if_error: true
+          verbose: true
