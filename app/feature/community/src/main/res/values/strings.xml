@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="community_title">Community</string>
+    <string name="community_badge_new">NEW</string>
+    <string name="community_native">NATIVE</string>
+    <string name="community_learns">LEARNS</string>
+    <string name="community_error">Couldn\'t load the community.</string>
+    <string name="community_retry">Try again</string>
+</resources>

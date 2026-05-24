@@ -30,7 +30,7 @@ internal object HttpClientProvider {
 
         install(Logging) {
             logger = HttpLogger()
-            level = LogLevel.INFO
+            level = LogLevel.ALL
         }
 
         defaultRequest {
