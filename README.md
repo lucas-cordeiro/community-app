@@ -2,7 +2,9 @@
 
 A small Android app that lists a language‑learning community (paginated) and lets you like members, with the like state persisted locally. It's a showcase of modular Clean Architecture with Jetpack Compose, a reactive MVVM layer, and solid test coverage.
 
-<img src="screenshots/community.png" width="300" alt="Community screen" />
+|                                    Light                                    |                                   Dark                                    |
+|:---------------------------------------------------------------------------:|:-------------------------------------------------------------------------:|
+| <img src="screenshots/community_light.png" width="260" alt="Light theme" /> | <img src="screenshots/community_dark.png" width="260" alt="Dark theme" /> |
 
 ## Features
 
@@ -14,19 +16,19 @@ A small Android app that lists a language‑learning community (paginated) and l
 
 ## Tech stack
 
-| Concern | Choice |
-|---|---|
-| Language / JVM | Kotlin 2.2 / JVM 21 |
-| UI | Jetpack Compose (Material 3) |
-| Navigation | Navigation Compose (type‑safe routes) |
-| MVVM | [Ymir](https://github.com/lucas-cordeiro/Ymir) (`UiState` / `UiAction`) |
-| DI | Koin 4 |
-| Networking | Ktor 3 (OkHttp) + kotlinx.serialization |
-| Persistence | DataStore Preferences |
-| Images | Coil 3 |
-| Flags | flagkit‑compose |
-| Coverage | Kover |
-| Tests | JUnit, MockK, Coroutines Test, Compose UI Test, Ktor MockEngine |
+| Concern        | Choice                                                                  |
+|----------------|-------------------------------------------------------------------------|
+| Language / JVM | Kotlin 2.2 / JVM 21                                                     |
+| UI             | Jetpack Compose (Material 3)                                            |
+| Navigation     | Navigation Compose (type‑safe routes)                                   |
+| MVVM           | [Ymir](https://github.com/lucas-cordeiro/Ymir) (`UiState` / `UiAction`) |
+| DI             | Koin 4                                                                  |
+| Networking     | Ktor 3 (OkHttp) + kotlinx.serialization                                 |
+| Persistence    | DataStore Preferences                                                   |
+| Images         | Coil 3                                                                  |
+| Flags          | flagkit‑compose                                                         |
+| Coverage       | Kover                                                                   |
+| Tests          | JUnit, MockK, Coroutines Test, Compose UI Test, Ktor MockEngine         |
 
 Min SDK 24 · Compile/Target SDK 36 · AGP 8.13.
 
